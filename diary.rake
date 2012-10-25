@@ -40,10 +40,6 @@ DBFILE           = ENV["DIARY_DBFILE"]    || ENV["HOME"] + "/" + DIARY_DB
 #   puts i
 # end
 # exit(0)
-
-#DBFILE           = ENV["HOME"] + "/.notes.db"
-#DBFILE           = ENV["DIARY_DBFILE"] || ENV["HOME"] + "
-
 # Extract the age and calculate the
 # date-of-birth.
 #--
