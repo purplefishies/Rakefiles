@@ -1,4 +1,13 @@
-
+# The program takes an initial word or phrase from
+# the command line (or in the absence of a
+# parameter from the first line of standard
+# input).  In then reads successive words or
+# phrases from standard input and reports whether
+# they are angrams of the first word.
+#
+# Author::    James Damon  (mailto:james.damon@ntrepidcorp.com)
+# Copyright:: Copyright (c) 2012 
+# License::   Distributes under the same terms as Ruby
 require 'rubygems'
 require 'rake'
 require 'diary_model'
@@ -11,20 +20,37 @@ require 'chronic'
 # tomorrow..............................................................DONE!
 #
 #
-# 2. List only tasks in the short view that aren't completed............
+# 2. List only tasks in the short view that aren't completed............DONE!
 #
 # 3.
 #
 #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 namespace :diary do 
 
-DIR_ENVIRONMENT  = ENV["DIARY_DIR"] || "work"
-LOCATION         = ENV["LOCATION"] || "work"
+DIARY_TYPE       = ENV["DIARY_TYPE"]      || "work"
+DIR_ENVIRONMENT  = ENV["DIARY_DIR"]       || DIARY_TYPE
+LOCATION         = ENV["DIARY_LOCATION"]  || DIR_ENVIRONMENT
+DIARY_DB         = ENV["DIARY_DB"]        || "." + DIARY_TYPE + ".db"
+DIARY_ROOT       = ENV["DIARY_ROOT"]      || ENV["HOME"] + "/Schedule/" + DIR_ENVIRONMENT + "/"
+MAIN_DIRECTORY   = DIARY_ROOT
 
-MAIN_DIRECTORY   = ENV["HOME"] + "/Schedule/" + DIR_ENVIRONMENT + "/"
-DBFILE           = ENV["HOME"] + "/.notes.db"
+DBFILE           = ENV["DIARY_DBFILE"]    || ENV["HOME"] + "/" + DIARY_DB
 
+# for i in [MAIN_DIRECTORY,DIARY_ROOT,DIARY_DB,LOCATION,DIR_ENVIRONMENT]
+#   puts i
+# end
+# exit(0)
 
+#DBFILE           = ENV["HOME"] + "/.notes.db"
+#DBFILE           = ENV["DIARY_DBFILE"] || ENV["HOME"] + "
+
+# Extract the age and calculate the
+# date-of-birth.
+#--
+# FIXME: fails if the birthday falls on
+# February 29th
+#++
+# The DOB is returned as a Time object.
 def currentDay
   time = Time.new()
   MAIN_DIRECTORY + time.strftime("%Y/%b/%m_%d_%y.yml")
@@ -36,9 +62,9 @@ task :updateProject do |t|
     ActiveSupport::Deprecation.silenced = true
     ActiveRecord::Base.establish_connection( :adapter => "sqlite3", :dbfile => DBFILE )
   if File.file?(curfile )
-    
+
   else
-    
+
   end
 
 end
