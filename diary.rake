@@ -18,13 +18,11 @@ require 'chronic'
 #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 namespace :diary do 
 
-DIR_ENVIRONMENT = ENV["DIARY_DIR"] || "work"
-LOCATION = ENV["LOCATION"] || "work"
+DIR_ENVIRONMENT  = ENV["DIARY_DIR"] || "work"
+LOCATION         = ENV["LOCATION"] || "work"
 
-MAIN_DIRECTORY = ENV["HOME"] + "/Schedule/" + DIR_ENVIRONMENT + "/"
-DBFILE = ENV["HOME"] + "/.notes.db"
-
-
+MAIN_DIRECTORY   = ENV["HOME"] + "/Schedule/" + DIR_ENVIRONMENT + "/"
+DBFILE           = ENV["HOME"] + "/.notes.db"
 
 
 def currentDay
@@ -58,7 +56,6 @@ task :addDiary do |t|
   if ENV["DIARY"].empty?
     throw Exception.new("Need to have specified DIARY=\"??\"" )
   end
-#  c = Category.find(:all, :conditions => ['name like ?','%iary%'] ).first
   c = Category.find(:all, :conditions => ['name like ?',getDiary()] ).first
 
   if !c.nil? && ENV["DIARY"]
@@ -80,7 +77,7 @@ task :addTask, [:task,:dueDate,:expected,:parent] do |t,args|
                             ),
                :start   => Time.now
                )
-  # b.category = Category.find(:all, :conditions => ['name = ?',"task"] ).first
+
   b.category = Category.find(:all, :conditions => ['name = ?',getTask() ] ).first
   b.save
 end
@@ -94,8 +91,6 @@ task :searchDiary, [:query, :flag] do |t,args|
   connect()
   reg  = Regexp.new( /#{args.query}/ )
   c = Category.find( :all ) 
-#  getTasks("diary").find_all { |i| i.entry =~ reg }.each { |i|
-#  puts "Foo"
   getTasks( getDiary() ).find_all { |i| i.entry =~ reg }.each { |i|
     puts "##" * 3;
     puts i.entry
@@ -122,10 +117,9 @@ end
 
 desc "Delete Last diary entry"
 task :deleteLastDiary do |t|
-#  puts "Going to destroy this entry"
+
   connect()
-#  d = getTasks("diary").last
-#  puts d.entry
+
   d = getTasks( getDiary() ).last
 
   d.destroy
@@ -173,34 +167,12 @@ desc "List Tasks"
 task :newlistTasks , [:completed, :numlist] do |t, args|
   args.default( :completed => "false" )
   args.default( :numlist => true )
-  # begin
-  #   args.completed = eval(args.completed)
-  # rescue 
-  #   args.completed = false
-  # end
-  #puts "HERE"
+
   args.completed = false
   args.numlist = false
-  # if args.completed && args.numlist
-  #   fn = Proc.new { |x|
-  #     begin
-  #       !x.completed? || ( x.completed? &&  x.completed >= Date.today )
-  #     rescue
-  #       false
-  #     end
-  #   }
-  # else
-  #   fn = Proc.new { |x|
-  #     begin 
-  #       !x.completed?
-  #     rescue
-  #       false
-  #     end
-  #   }
-  # end
+
   connect()
-  # puts "HERE !!!!"
-  # c = Category.find(:all, :conditions => ['name = ?',"task"] ).first
+
   c = Category.find(:all, :conditions => ['name = ?', getTask() ] ).first
 
   entries = getTasks( getTask() ).find_all { |i|
@@ -214,7 +186,7 @@ end
 
 def findTask(id)
   connect()
-#  c = Category.find(:all, :conditions => ['name = ?',"task"] ).first
+
   c = Category.find(:all, :conditions => ['name = ?', getTask()] ).first
   return Task.find(:all, 
                    :conditions => {
@@ -227,27 +199,24 @@ end
 desc "Deletes a task based on number"
 task :deleteTask, [:taskID] do |t,args|
   b = findTask( args.taskID )
-#  puts b.new_to_yaml("")
+
   b.destroy
 end
 
 desc "Mark a task as completed"
 task :completeTask, [:taskID,:date] do |t,args|
-  #args.with_defaults( :date => DateTime.now )
+
   completed_date = args.date
   if !completed_date.nil? 
     puts "Parsing"
     completed_date = Chronic.parse(args.date)
   else
-    #puts "Assignined other"
     completed_date = DateTime.now()
   end
-  #puts "This date is #{completed_date}"
-  #puts "Date: #{DateTime.now()}"
   b = findTask( args.taskID )
-  #puts "B is #{b.to_yaml}"
+
   b.completed = completed_date.to_datetime
-  #b.completed = Time.now
+
   b.save!
 end
 
@@ -287,7 +256,6 @@ task :modifyTask, [:action, :tagnum] do |t|
   if args.action.nil?
     throw Exception.new("Action must be either 'delete' or 'modify'")
   end
-  
 end
 
 #
@@ -309,10 +277,9 @@ end
 
 def selectTasksMatching(regex)
   c = Category.find(:all, :conditions => ['name = ?',"task"] ).first
-  alltasks=  Task.find(:all, 
-                       :conditions => 
-                       {:category_id => c.id }
-            ).find_all { |j| 
+  alltasks=  Task.find(:all,
+                       :conditions => {:category_id => c.id }
+            ).find_all { |j|
                j.entry =~ regex and j.completed.nil?
             }
   return alltasks
@@ -327,7 +294,6 @@ desc "Test task"
 task :doTest do |t|
   connect()
   entry = getYamlFile
-  
 end
 
 desc "Second Task"
@@ -360,7 +326,7 @@ def formatTasks(tasks)
     retstring += i.new_to_yaml("")
   }
   retstring += "\n\n"
-  return retstring    
+  return retstring
 end
 
 def getOnlyTasks
@@ -368,17 +334,16 @@ def getOnlyTasks
   retstring += "date: #{Date.today.strftime("%m/%d/%Y")}\n"
   retstring += "\n"
   retstring += "tasks: \n"
-  # c = Category.find(:all, :conditions => ['name = ?',"task"] ).first
-  #puts "Anohter"
+
   c = Category.find(:all, :conditions => ['name = ?', getTask() ] ).first
   Task.find(:all, 
             :conditions => ["category_id == :id",
                              { :id    => c.id }
                            ]
-           ).find_all { |j| j.parents.empty?   and 
-                            ( j.completed.nil? || 
+           ).find_all { |j| j.parents.empty?   and
+                            ( j.completed.nil? ||
                               j.completed >= Date.today.to_time )
-                       }.each { |i| 
+                       }.each { |i|
     retstring += i.new_to_yaml("")
   }
   retstring += "\n\n"
@@ -389,14 +354,14 @@ end
 #
 #
 def getYamlFile
-  #puts "HERE"
+
   retstring = getOnlyTasks
-  # puts "HERE"
+
   c = Category.find(:all, :conditions => ['name = ?',"diary"] ).first
   retstring += "\n\njournal:\n"
-  # getTasks("diary").find_all { |i|
+
   getTasks( getDiary() ).find_all { |i|
-    i.start >= Date.today.to_time and 
+    i.start >= Date.today.to_time and
     ( i.completed.nil? || i.completed > Date.today.to_time )
   }.each { |j|
     retstring += "  - time: #{j.start}\n"
@@ -404,13 +369,13 @@ def getYamlFile
     tmp["desc"] = j.entry
     retstring += "    desc:"
 
-    if j.entry =~ /\n/ 
+    if j.entry =~ /\n/
       tmpstring = "      #{j.entry}"
       tmpstring.gsub!(/\n/,"\n      ")
       retstring += " |\n#{tmpstring}\n"
     else
       retstring += " #{j.entry}\n"
-#    retstring += tmp.to_yaml.sub(/^---/g,'')
+
     end
   }
   return retstring
