@@ -46,6 +46,7 @@ task :makeQuizPDF , [:file] do |t,args|
   puts "HERE"
   puts "Using file #{args[:file]}"
   frontpage = "front_page.pdf"
+  debugger()
   c = LatexProblems.new( :file => args[:file] ,
                          :basetype => PngProblem 
                          ) 
@@ -91,6 +92,7 @@ task :makeQuizPDF , [:file] do |t,args|
   #sh %{ pdfjam #{pnglist.join(" ")} --outfile #{directory + "/quiz.pdf"} }
   #sh %{ pdfjam --papersize '{14.5cm,7.4cm}' #{pnglist.join(" ")} --outfile #{directory + "/quiz.pdf"} }
   #sh %{pdfjam  --fitpaper 'true' --suffix joined  --papersize '{14.5cm,7.4cm}' #{pnglist.join(" ")} --outfile #{directory + "/quiz.pdf"} }
+  debugger()
   sh %{pdfjam  --fitpaper 'true' --suffix joined  --papersize '{8.5cm,7.4cm}' #{frontpage} #{pnglist.join(" ")} --outfile #{directory + "/quiz.pdf"} }
   sh %{pdfjam #{directory + "/quiz.pdf"}  '2-' --papersize '{8.5cm,7.4cm}' --outfile #{directory + "/quiz.pdf"}}
 end
@@ -112,6 +114,7 @@ def makeFrontPDF(filename)
 \\usepackage{problems}
 \\usepackage{mystyle}
 \\usepackage{geometry}
+\\usepackage{xskak}
 \\geometry{
 paperwidth=7.4cm,
 paperheight=5.2cm,
@@ -133,6 +136,7 @@ FRONT
   fp = File.open(filename,"w+")
   fp.write(header)
   fp.close()
+  debugger()
   sh "pdflatex #{filename}"
   newfile = filename.pathmap("%n") + ".pdf"
   return newfile
@@ -173,6 +177,7 @@ def makeLatexFile(filename, string)
 \\usepackage{problems}
 \\usepackage{mystyle}
 \\usepackage{geometry}
+\\usepackage{xskak}
 \\geometry{
 paperwidth=7.4cm,
 paperheight=5.2cm,
