@@ -39,59 +39,125 @@ end
 
 
 
+desc "Make Lots Quiz PDFS, set NOTECARDS=file1,file2..."
+task :makeQuizPDFS do |t,args|
+  entries = ENV.has_key?("NOTECARDS") ? ENV["NOTECARDS"].split(",") : [args[:file]]
+  frontpage = "front_page.pdf"
+
+  final_directory = "Tmp"
+
+
+  if !File.directory?("#{final_directory}" )
+    Dir.mkdir( "#{final_directory}")
+  end
+
+  filelist = []
+  pnglist = []
+  counter= 0
+
+
+
+  entries.each { |entry | 
+    defined? debugger ? debugger() : nil
+    
+    c = LatexProblems.new( :file => entry, :basetype => PngProblem )
+    
+    puts "Problems are #{c.problems}"
+
+
+    directory = "#{final_directory}/#{entry.pathmap("%X")}"
+    if File.directory?( directory )
+      sh %{rm -rf #{directory} }
+    end
+    Dir.mkdir( directory )
+    allfiles = Dir.glob("*.eps")
+    allfiles.each { |i| 
+      sh %{cp -f *.eps #{i}}
+    }
+
+    c.problems.each { |problem|
+      skipvalue = false
+      filelist << "#{directory}/question_#{counter}.tex"
+      makeLatexFile( filelist.last , problem.question )
+      pnglist << makePNGFile( filelist.last )
+      if ! pnglist.last
+        skipvalue = true
+        pnglist.pop
+      end
+      if ! skipvalue
+        filelist << "#{directory}/answer_#{counter}.tex"
+        makeLatexFile( filelist.last, problem.answer )
+        pnglist << makePNGFile( filelist.last )
+        if !pnglist.last
+          pnglist.pop
+        end
+      end
+      counter += 1
+    }
+    frontpage = makeFrontPDF( "#{directory}/front_page.tex" )
+    defined? debugger ? debugger() : nil
+    sh %{pdfjam  --fitpaper 'true' --suffix joined  --papersize '{8.5cm,7.4cm}' #{frontpage} #{pnglist.join(" ")} --outfile #{final_directory + "/quiz.pdf"} }
+    sh %{pdfjam #{final_directory + "/quiz.pdf"}  '2-' --papersize '{8.5cm,7.4cm}' --outfile #{final_directory + "/quiz.pdf"}}
+  }
+
+end
+
 
 desc "Make Quiz PDF"
 task :makeQuizPDF , [:file] do |t,args|
   args.with_defaults( :file => "formulas.tex" )
+  entries = ENV.has_key?("NOTECARDS") ? ENV["NOTECARDS"].split(",") : [args[:file]]
   puts "HERE"
   puts "Using file #{args[:file]}"
+  
   frontpage = "front_page.pdf"
-  defined? debugger ? debugger() : nil
-  c = LatexProblems.new( :file => args[:file] ,
-                         :basetype => PngProblem
-                         )
+  entries.each { |entry | 
+    defined? debugger ? debugger() : nil
+    
+    c = LatexProblems.new( :file => entry, :basetype => PngProblem )
+    
+    puts "Problems are #{c.problems}"
 
-  puts "Problems are #{c.problems}"
-
-  if !File.directory?("Tmp" )
-    Dir.mkdir( "Tmp")
-  end
-  directory = "Tmp/#{args[:file].pathmap("%X")}"
-  if File.directory?( directory )
-    sh %{rm -rf #{directory} }
-  end
-  Dir.mkdir( directory )
-  allfiles = Dir.glob("*.eps")
-  allfiles.each { |i| 
-    sh %{cp -f *.eps #{i}}
-  }
-  filelist = []
-  pnglist = []
-  counter= 0
-  c.problems.each { |problem|
-    skipvalue = false
-    filelist << "#{directory}/question_#{counter}.tex"
-    #checkFiles(directory, ["mystyle.sty","problems.sty"])
-    makeLatexFile( filelist.last , problem.question )
-    pnglist << makePNGFile( filelist.last )
-    if ! pnglist.last
-      skipvalue = true
-      pnglist.pop
+    if !File.directory?("Tmp" )
+      Dir.mkdir( "Tmp")
     end
-    if ! skipvalue
-      filelist << "#{directory}/answer_#{counter}.tex"
-      makeLatexFile( filelist.last, problem.answer )
+    directory = "Tmp/#{entry.pathmap("%X")}"
+    if File.directory?( directory )
+      sh %{rm -rf #{directory} }
+    end
+    Dir.mkdir( directory )
+    allfiles = Dir.glob("*.eps")
+    allfiles.each { |i| 
+      sh %{cp -f *.eps #{i}}
+    }
+    filelist = []
+    pnglist = []
+    counter= 0
+    c.problems.each { |problem|
+      skipvalue = false
+      filelist << "#{directory}/question_#{counter}.tex"
+      #checkFiles(directory, ["mystyle.sty","problems.sty"])
+      makeLatexFile( filelist.last , problem.question )
       pnglist << makePNGFile( filelist.last )
-      if !pnglist.last
+      if ! pnglist.last
+        skipvalue = true
         pnglist.pop
       end
-    end
-    counter += 1
+      if ! skipvalue
+        filelist << "#{directory}/answer_#{counter}.tex"
+        makeLatexFile( filelist.last, problem.answer )
+        pnglist << makePNGFile( filelist.last )
+        if !pnglist.last
+          pnglist.pop
+        end
+      end
+      counter += 1
+    }
+    frontpage = makeFrontPDF( "#{directory}/front_page.tex" )
+    defined? debugger ? debugger() : nil
+    sh %{pdfjam  --fitpaper 'true' --suffix joined  --papersize '{8.5cm,7.4cm}' #{frontpage} #{pnglist.join(" ")} --outfile #{directory + "/quiz.pdf"} }
+    sh %{pdfjam #{directory + "/quiz.pdf"}  '2-' --papersize '{8.5cm,7.4cm}' --outfile #{directory + "/quiz.pdf"}}
   }
-  frontpage = makeFrontPDF( "#{directory}/front_page.tex" )
-  defined? debugger ? debugger() : nil
-  sh %{pdfjam  --fitpaper 'true' --suffix joined  --papersize '{8.5cm,7.4cm}' #{frontpage} #{pnglist.join(" ")} --outfile #{directory + "/quiz.pdf"} }
-  sh %{pdfjam #{directory + "/quiz.pdf"}  '2-' --papersize '{8.5cm,7.4cm}' --outfile #{directory + "/quiz.pdf"}}
 end
 
 def checkFiles(dir,files)
