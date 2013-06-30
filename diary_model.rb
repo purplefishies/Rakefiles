@@ -1,12 +1,17 @@
-require 'rubygems'
 
-#require 'active_record'
+
+require 'rubygems'
+gem 'rails', '3.0.9'
+gem 'activerecord', '3.0.9'
+require 'active_record'
 #gem 'activerecord' , '2.3.11'
 #gem 'activerecord','2.3.9'
 #gem 'activerecord','2.3.11'
 #ActiveSupport::Deprecation.silenced = true
-gem 'rails' , '2.3.9'
-require 'active_record'
+#gem 'rails' , '2.3.9'
+#gem 'rails', '3.0.9'
+
+
 
 class Task  < ActiveRecord::Base
   has_many :tags_tasks

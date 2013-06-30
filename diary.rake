@@ -5,13 +5,17 @@
 # phrases from standard input and reports whether
 # they are angrams of the first word.
 #
-# Author::    James Damon  (mailto:james.damon@ntrepidcorp.com)
+# Author::    James Damon  (mailto:jdamon@gmail.com)
 # Copyright:: Copyright (c) 2012 
 # License::   Distributes under the same terms as Ruby
+
 require 'rubygems'
-require 'rake'
+gem 'activerecord','3.0.9'
+gem 'rake'
+gem 'chronic'
 require 'diary_model'
 require 'chronic'
+
 
 #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 # Going to modify it so that I can record how
@@ -56,7 +60,7 @@ desc "First Task"
 task :updateProject do |t|
   curfile = currentDay()
     ActiveSupport::Deprecation.silenced = true
-    ActiveRecord::Base.establish_connection( :adapter => "sqlite3", :dbfile => DBFILE )
+    ActiveRecord::Base.establish_connection( :adapter => "sqlite3", :database => DBFILE )
   if File.file?(curfile )
 
   else
@@ -150,6 +154,7 @@ end
 desc "List Tasks"
 task :listTasks , [:numlist,:completed] do |t, args|
   args.default( :numlist => false )
+  defined?  debugger ? debugger() : nil
   if args.completed
     fn = Proc.new { |x| true }
   else
@@ -265,7 +270,6 @@ task :getTask , [:regex] do |t,args|
     regex = Regexp.new( ENV["REGEX"] )
   end
   connect()
-#  c = Category.find(:all, :conditions => ['name = ?',"task"] ).first
   c = Category.find(:all, :conditions => ['name = ?', getTask() ] ).first
   puts selectTasksMatching( regex ).map { |i| 
     i.new_to_yaml("")
@@ -309,7 +313,7 @@ end
 
 def connect
   ActiveSupport::Deprecation.silenced = true
-  ActiveRecord::Base.establish_connection( :adapter => "sqlite3", :dbfile => DBFILE )
+  ActiveRecord::Base.establish_connection( :adapter => "sqlite3", :database => DBFILE )
 end
 
 desc "Test task"

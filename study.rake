@@ -46,10 +46,10 @@ task :makeQuizPDF , [:file] do |t,args|
   puts "HERE"
   puts "Using file #{args[:file]}"
   frontpage = "front_page.pdf"
-  debugger()
+  defined? debugger ? debugger() : nil
   c = LatexProblems.new( :file => args[:file] ,
-                         :basetype => PngProblem 
-                         ) 
+                         :basetype => PngProblem
+                         )
 
   puts "Problems are #{c.problems}"
 
@@ -82,17 +82,14 @@ task :makeQuizPDF , [:file] do |t,args|
       filelist << "#{directory}/answer_#{counter}.tex"
       makeLatexFile( filelist.last, problem.answer )
       pnglist << makePNGFile( filelist.last )
-      if !pnglist.last 
+      if !pnglist.last
         pnglist.pop
       end
     end
     counter += 1
   }
   frontpage = makeFrontPDF( "#{directory}/front_page.tex" )
-  #sh %{ pdfjam #{pnglist.join(" ")} --outfile #{directory + "/quiz.pdf"} }
-  #sh %{ pdfjam --papersize '{14.5cm,7.4cm}' #{pnglist.join(" ")} --outfile #{directory + "/quiz.pdf"} }
-  #sh %{pdfjam  --fitpaper 'true' --suffix joined  --papersize '{14.5cm,7.4cm}' #{pnglist.join(" ")} --outfile #{directory + "/quiz.pdf"} }
-  debugger()
+  defined? debugger ? debugger() : nil
   sh %{pdfjam  --fitpaper 'true' --suffix joined  --papersize '{8.5cm,7.4cm}' #{frontpage} #{pnglist.join(" ")} --outfile #{directory + "/quiz.pdf"} }
   sh %{pdfjam #{directory + "/quiz.pdf"}  '2-' --papersize '{8.5cm,7.4cm}' --outfile #{directory + "/quiz.pdf"}}
 end
@@ -136,7 +133,7 @@ FRONT
   fp = File.open(filename,"w+")
   fp.write(header)
   fp.close()
-  debugger()
+  defined? debugger ? debugger() : nil
   sh "pdflatex #{filename}"
   newfile = filename.pathmap("%n") + ".pdf"
   return newfile
@@ -144,11 +141,10 @@ end
 
 def makePNGFile(filename)
   curdir = Dir.pwd()
-  #outfile = filename.pathmap("%n") + ".png"
   outfile = filename.pathmap("%n") + ".pdf"
   Dir.chdir(filename.pathmap("%d"))
   tmp = "tmp001"
-  begin 
+  begin
     sh %{latex -halt-on-error #{filename.pathmap("%n")} }
     # %{latex -halt-on-error #{filename.pathmap("%n")} }
     sh %{dvips -Pwww -i -E  -o tmp #{filename.pathmap("%n") + ".dvi"} }
