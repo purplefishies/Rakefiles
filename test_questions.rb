@@ -5,10 +5,7 @@
 require 'rubygems'
 require 'xml/mapping'
 require 'rexml/document'
-#require 'iconv'
-# class ProblemEntity < String
-#   include XML::Mapping
-# end
+require 'open-uri'
 
 
 class Problem

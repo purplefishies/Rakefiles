@@ -7,8 +7,23 @@ require 'rake'
 require 'rake/clean'
 require 'yaml'
 require 'test_questions'
-namespace :study do 
+require 'uri'
 
+if ENV.has_key?("OUTPUT_FILE") 
+  tmp = STDOUT.dup()
+  # STDOUT = File.open(ENV["OUTPUT_FILE"],"w")
+  #$stderr = File.open(ENV["OUTPUT_FILE"],"w")
+  $stderr.close
+end
+
+
+namespace :study do 
+if ENV.has_key?("SILENT")
+  Rake::FileUtilsExt::verbose(false)
+end
+if ENV.has_key?("NOWRITE") 
+  Rake::FileUtilsExt::nowrite(true)
+end
 
 
 task :default => [:makeQuizPDF]
@@ -38,13 +53,19 @@ task :clean do |t|
 end
 
 
-
+#
+# Need to verify that the file was correctly rendered, otherwise
+# don't add the answer for a question
+#
 desc "Make Lots Quiz PDFS, set NOTECARDS=file1,file2..."
 task :makeQuizPDFS do |t,args|
-  entries = ENV.has_key?("NOTECARDS") ? ENV["NOTECARDS"].split(",") : [args[:file]]
+
+  entries = ( ENV.has_key?("NOTECARDS") ? ENV["NOTECARDS"].split(",") : [args[:file]] ) .collect { |f|
+    URI(f).path
+  }
   frontpage = "front_page.pdf"
 
-  final_directory = "Tmp"
+  final_directory = ENV.has_key?("NOTECARD_DIRECTORY") ? ENV["NOTECARD_DIRECTORY"] : "Tmp"
 
 
   if !File.directory?("#{final_directory}" )
@@ -58,26 +79,27 @@ task :makeQuizPDFS do |t,args|
 
 
   entries.each { |entry | 
+
     defined? debugger ? debugger() : nil
     
     c = LatexProblems.new( :file => entry, :basetype => PngProblem )
     
-    puts "Problems are #{c.problems}"
 
-
-    directory = "#{final_directory}/#{entry.pathmap("%X")}"
-    if File.directory?( directory )
-      sh %{rm -rf #{directory} }
-    end
-    Dir.mkdir( directory )
-    allfiles = Dir.glob("*.eps")
-    allfiles.each { |i| 
-      sh %{cp -f *.eps #{i}}
-    }
+    # Setup the directory 
+    
+    # directory = "#{final_directory}/#{entry.pathmap("%X")}"
+    # if File.directory?( directory )
+    #   sh %{rm -rf #{directory} }
+    # end
+    # Dir.mkdir( directory )
+    # allfiles = Dir.glob("*.eps")
+    # allfiles.each { |i| 
+    #   sh %{cp -f *.eps #{i}}
+    # }
 
     c.problems.each { |problem|
       skipvalue = false
-      filelist << "#{directory}/question_#{counter}.tex"
+      filelist << "#{final_directory}/question_#{counter}.tex"
       makeLatexFile( filelist.last , problem.question )
       pnglist << makePNGFile( filelist.last )
       if ! pnglist.last
@@ -85,7 +107,7 @@ task :makeQuizPDFS do |t,args|
         pnglist.pop
       end
       if ! skipvalue
-        filelist << "#{directory}/answer_#{counter}.tex"
+        filelist << "#{final_directory}/answer_#{counter}.tex"
         makeLatexFile( filelist.last, problem.answer )
         pnglist << makePNGFile( filelist.last )
         if !pnglist.last
@@ -94,11 +116,12 @@ task :makeQuizPDFS do |t,args|
       end
       counter += 1
     }
-    frontpage = makeFrontPDF( "#{directory}/front_page.tex" )
-    defined? debugger ? debugger() : nil
-    sh %{pdfjam  --fitpaper 'true' --suffix joined  --papersize '{8.5cm,7.4cm}' #{frontpage} #{pnglist.join(" ")} --outfile #{final_directory + "/quiz.pdf"} }
-    sh %{pdfjam #{final_directory + "/quiz.pdf"}  '2-' --papersize '{8.5cm,7.4cm}' --outfile #{final_directory + "/quiz.pdf"}}
   }
+  frontpage = makeFrontPDF( "#{final_directory}/front_page.tex" )
+  defined? debugger ? debugger() : nil
+  #puts "HERE !pnglist:#{pnglist.join("\n")}"
+  sh %{pdfjam  --fitpaper 'true' --suffix joined  --papersize '{8.5cm,7.4cm}' #{frontpage} #{pnglist.join(" ")} --outfile #{final_directory + "/quiz.pdf"} }
+  sh %{pdfjam #{final_directory + "/quiz.pdf"}  '2-' --papersize '{8.5cm,7.4cm}' --outfile #{final_directory + "/quiz.pdf"}}
 
 end
 
@@ -106,11 +129,15 @@ end
 desc "Make Quiz PDF"
 task :makeQuizPDF , [:file] do |t,args|
   args.with_defaults( :file => "formulas.tex" )
+
+  output_file = args[:file].pathmap("%X") + ".pdf"
+
   entries = ENV.has_key?("NOTECARDS") ? ENV["NOTECARDS"].split(",") : [args[:file]]
-  puts "HERE"
-  puts "Using file #{args[:file]}"
+  #puts "HERE"
+  #puts "Using file #{args[:file]}"
   
   frontpage = "front_page.pdf"
+
   entries.each { |entry | 
     defined? debugger ? debugger() : nil
     
@@ -135,35 +162,57 @@ task :makeQuizPDF , [:file] do |t,args|
     counter= 0
     c.problems.each { |problem|
       skipvalue = false
-      filelist << "#{directory}/question_#{counter}.tex"
-      #checkFiles(directory, ["mystyle.sty","problems.sty"])
+
+      #filelist << "#{directory}/question_#{counter}.tex"
+      keepfile = "#{directory}/question_#{counter}.tex"
+      filelist << keepfile
+      #puts "KEEPFILE: #{keepfile}"      
       makeLatexFile( filelist.last , problem.question )
-      pnglist << makePNGFile( filelist.last )
-      if ! pnglist.last
-        skipvalue = true
+
+      tmpfile = makePNGFile( filelist.last )
+      #print "RETURNED #{tmpfile}"
+      #pnglist
+      
+      if ! tmpfile
+        # skipvalue = true
+        # pnglist.pop
+        next ENTRY
+      else 
+        pnglist << tmpfile
+      end
+
+      
+      #filelist << "#{directory}/answer_#{counter}.tex"
+      keepfile = "#{directory}/answer_#{counter}.tex"
+      #puts "KEEPFILE: #{keepfile}"
+      #puts "NUMPGN: #{pnglist.length}"
+      filelist << keepfile
+      makeLatexFile( filelist.last, problem.answer )
+      tmpfile = makePNGFile( filelist.last )
+      #puts "FILE: '#{filelist.last}' , TMPFILE:#{tmpfile}"
+      # tmpfile << tmp
+      if !tmpfile
         pnglist.pop
+        next ENTRY
+      else 
+        pnglist << tmpfile
       end
-      if ! skipvalue
-        filelist << "#{directory}/answer_#{counter}.tex"
-        makeLatexFile( filelist.last, problem.answer )
-        pnglist << makePNGFile( filelist.last )
-        if !pnglist.last
-          pnglist.pop
-        end
-      end
+
       counter += 1
     }
     frontpage = makeFrontPDF( "#{directory}/front_page.tex" )
     defined? debugger ? debugger() : nil
-    sh %{pdfjam  --fitpaper 'true' --suffix joined  --papersize '{8.5cm,7.4cm}' #{frontpage} #{pnglist.join(" ")} --outfile #{directory + "/quiz.pdf"} }
-    sh %{pdfjam #{directory + "/quiz.pdf"}  '2-' --papersize '{8.5cm,7.4cm}' --outfile #{directory + "/quiz.pdf"}}
+    #puts "TRUEpnglist:#{pnglist.join("\n")}"
+    sh %{pdfjam  --fitpaper 'true' --suffix joined  --papersize '{8.5cm,7.4cm}' #{frontpage} #{pnglist.join(" ")} --outfile #{directory + "/#{output_file}"} }
+    sh %{pdfjam #{directory + "/#{output_file}"}  '2-' --papersize '{8.5cm,7.4cm}' --outfile #{directory + "/#{output_file}"}}
+    cp File.expand_path(directory + "/#{output_file}" ) , "." 
+    rm "front_page.pdf"
   }
 end
 
 def checkFiles(dir,files)
   files.each { |file|
     if !File.exists?("#{dir}/#{file}" )
-#      File.cp( file, "#{dir}/#{file}" )
       cp file  , "#{dir}/#{file}"
     end
   }
@@ -210,15 +259,12 @@ def makePNGFile(filename)
   outfile = filename.pathmap("%n") + ".pdf"
   Dir.chdir(filename.pathmap("%d"))
   tmp = "tmp001"
+  #puts "ORIG: #{filename}"
   begin
     sh %{latex -halt-on-error #{filename.pathmap("%n")} }
-    # %{latex -halt-on-error #{filename.pathmap("%n")} }
     sh %{dvips -Pwww -i -E  -o tmp #{filename.pathmap("%n") + ".dvi"} }
-    #sh %{gs -r300 -dEPSCrop -dTextAlphaBits=4 -sDEVICE=png16m -sOutputFile=#{outfile} -dBATCH -dNOPAUSE #{tmp} }
     sh %{gs -r300 -dEPSCrop -dTextAlphaBits=4 -sDEVICE=pdfwrite -sOutputFile=#{outfile} -dBATCH -dNOPAUSE #{tmp} }
-    #sh %{dvipng -D 400 #{filename.pathmap("%n")} -o #{outfile} }
-    #sh %{convert #{outfile} #{outfile.pathmap("%X") + ".jpg"}}
-    #outfile = File.expand_path( outfile.pathmap("%X") + ".jpg" )
+    #puts "BEFORE: #{outfile}"
     outfile = File.expand_path( outfile.pathmap("%X") + ".pdf" )
   rescue  RuntimeError
     Dir.chdir(curdir)
