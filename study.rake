@@ -148,6 +148,7 @@ task :makeQuizPDF , [:file] do |t,args|
     filelist = []
     pnglist = []
     counter= 0
+
     c.problems.each { |problem|
       skipvalue = false
 
@@ -164,7 +165,7 @@ task :makeQuizPDF , [:file] do |t,args|
       if ! tmpfile
         # skipvalue = true
         # pnglist.pop
-        next ENTRY
+        next
       else 
         pnglist << tmpfile
       end
@@ -177,17 +178,19 @@ task :makeQuizPDF , [:file] do |t,args|
       filelist << keepfile
       makeLatexFile( filelist.last, problem.answer )
       tmpfile = makePNGFile( filelist.last )
-      #puts "FILE: '#{filelist.last}' , TMPFILE:#{tmpfile}"
-      # tmpfile << tmp
+
       if !tmpfile
+        puts "POOPING"
+        puts "#{pnglist.join("\n")}"
         pnglist.pop
-        next ENTRY
+        next
       else 
         pnglist << tmpfile
       end
 
       counter += 1
     }
+    puts "REACHED"
     frontpage = makeFrontPDF( "#{directory}/front_page.tex" )
     defined? debugger ? debugger() : nil
     #puts "TRUEpnglist:#{pnglist.join("\n")}"
