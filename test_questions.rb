@@ -33,7 +33,7 @@ class Problem
 
   def _getQuestion(problem)
 #    debugger()
-    problem =~ /^.*(?:\\begin\{Q\}\s*(\S.*?)\s*\\end\{Q\}).*$/xms
+    problem =~ /^.*(?:\\begin\{[kK]?Q\d?\}\s*(\S.*?)\s*\\end\{[kK]?Q\d?\}).*$/xms
     tmp = $1
     if !tmp.nil?
       tmp.gsub!(/\n/," ")
@@ -46,7 +46,7 @@ class Problem
   end
 
   def _getAnswer(problem)
-    problem =~ /^.*(?:\\begin\{A\}\s*(\S.*?)\s*\\end\{A\}).*$/xms
+    problem =~ /^.*(?:\\begin\{[kK]?A\d?\}\s*(\S.*?)\s*\\end\{[kK]?A\d?\}).*$/xms
     tmp =  $1
 #    if !tmp.nil?
 #      tmp.gsub!(/\n/," ")
@@ -83,6 +83,8 @@ class LatexProblems
   def loadFile(file)
     defined? debugger ? debugger : nil 
     @problems = _findProblems(file )
+    puts "Found problems #{problems.length}"
+    # exit(1)
     @collections = [file.gsub!(/\.tex/,'')]
     @collection_range = [[0,@problems.length-1]]
   end
@@ -96,20 +98,17 @@ class LatexProblems
 
   def _findProblems(file)
     if RUBY_VERSION == "1.8.7" 
-      fp = IO.popen("between.pl -s 'begin\{QAP\}' -e 'end\{QAP}' -m -i -f #{file}")
+      fp = IO.popen("between.pl -s 'begin\{[Kk]?QAP\d?\}' -e 'end\{[kK]?QAP\d?}' -m -i -f #{file}")
     else
-      fp = IO.popen("between.pl -s 'begin\{QAP\}' -e 'end\{QAP}' -m -i -f #{file}", :external_encoding=>"UTF-8")
+      fp = IO.popen("between.pl -s 'begin\{[Kk]?QAP\d?\}' -e 'end\{[kK]?QAP\d?}' -m -i -f #{file}", :external_encoding=>"UTF-8")
     end
 
-    #ic = Iconv.new('UTF-8//IGNORE', 'UTF-8')
-    #require 'ruby-debug'
-    #debugger()
+
     lines = fp.readlines()
-    #lines = fp.readlines().collect { |i| ic.iconv(i) } 
-    #lines = fp.readlines().collect { |i| ic.encode(i) } 
+
     defined? debugger ? debugger : nil 
     begin
-      problems =  lines.join("").split(/\s+(?=\\begin\{QAP\})/).collect { |i|
+      problems =  lines.join("").split(/\s+(?=\\begin\{[kK]?QAP\d?\})/).collect { |i|
         @base_type.new( i )
       }
     rescue Exception => e
@@ -193,7 +192,3 @@ HEADER
   end
 end
 
-#puts "HERE"
-#c = findProblems("StatMechanics.tex")
-#c = LatexProblems.new(:file => "StatMechanics.tex")
-#c.writeParley("out.kvtml")

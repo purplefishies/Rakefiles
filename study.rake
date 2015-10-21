@@ -38,7 +38,8 @@ desc "Displays random tasks"
 task :makePDF , [:file] do |t,args| 
   args.with_defaults(:file => "formulas.tex")
   sh %{latex #{args.file}}
-  sh %{dvipdfm #{args.file.pathmap("%X")+".dvi"}}
+  # sh %{dvipdfm #{args.file.pathmap("%X")+".dvi"}}
+  sh %{dvipdfm #{args.file.pathmap("%f").pathmap("%X")+".dvi"}}
 end
 
 desc "Study Clean"
@@ -130,16 +131,17 @@ desc "Make Quiz PDF"
 task :makeQuizPDF , [:file] do |t,args|
   args.with_defaults( :file => "formulas.tex" )
 
-  output_file = args[:file].pathmap("%X") + ".pdf"
+  # output_file = args[:file].pathmap("%X") + ".pdf"
+  output_file = args[:file].pathmap("%f").pathmap("%X") + ".pdf"
 
   entries = ENV.has_key?("NOTECARDS") ? ENV["NOTECARDS"].split(",") : [args[:file]]
-  #puts "HERE"
-  #puts "Using file #{args[:file]}"
   
   frontpage = "front_page.pdf"
 
   entries.each { |entry | 
     defined? debugger ? debugger() : nil
+
+    # puts "Foo: #{entry}"
     
     c = LatexProblems.new( :file => entry, :basetype => PngProblem )
     
@@ -148,10 +150,14 @@ task :makeQuizPDF , [:file] do |t,args|
     if !File.directory?("Tmp" )
       Dir.mkdir( "Tmp")
     end
-    directory = "Tmp/#{entry.pathmap("%X")}"
+
+    #puts entry.pathmap("%f")
+    #directory = "Tmp/#{entry.pathmap("%X")}"
+    directory = "Tmp/#{entry.pathmap("%f")}"
     if File.directory?( directory )
       sh %{rm -rf #{directory} }
     end
+
     Dir.mkdir( directory )
     allfiles = Dir.glob("*.eps")
     allfiles.each { |i| 
@@ -223,9 +229,8 @@ def makeFrontPDF(filename)
 \\documentclass{article}
 \\usepackage{amsmath}
 \\usepackage{amssymb}
-\\usepackage{problems}
-\\usepackage{mystyle}
 \\usepackage{geometry}
+\\input{header}
 \\usepackage{xskak}
 \\geometry{
 paperwidth=7.4cm,
@@ -265,7 +270,8 @@ def makePNGFile(filename)
     sh %{dvips -Pwww -i -E  -o tmp #{filename.pathmap("%n") + ".dvi"} }
     sh %{gs -r300 -dEPSCrop -dTextAlphaBits=4 -sDEVICE=pdfwrite -sOutputFile=#{outfile} -dBATCH -dNOPAUSE #{tmp} }
     #puts "BEFORE: #{outfile}"
-    outfile = File.expand_path( outfile.pathmap("%X") + ".pdf" )
+    # outfile = File.expand_path( outfile.pathmap("%X") + ".pdf" )
+    outfile = File.expand_path( outfile.pathmap("%f").pathmap("%X") + ".pdf" )
   rescue  RuntimeError
     Dir.chdir(curdir)
     outfile = false
@@ -282,8 +288,7 @@ def makeLatexFile(filename, string)
 \\documentclass{article}
 \\usepackage{amsmath}
 \\usepackage{amssymb}
-\\usepackage{problems}
-\\usepackage{mystyle}
+\\input{header}
 \\usepackage{geometry}
 \\usepackage{xskak}
 \\geometry{
