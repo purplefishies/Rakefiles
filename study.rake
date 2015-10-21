@@ -85,19 +85,6 @@ task :makeQuizPDFS do |t,args|
     
     c = LatexProblems.new( :file => entry, :basetype => PngProblem )
     
-
-    # Setup the directory 
-    
-    # directory = "#{final_directory}/#{entry.pathmap("%X")}"
-    # if File.directory?( directory )
-    #   sh %{rm -rf #{directory} }
-    # end
-    # Dir.mkdir( directory )
-    # allfiles = Dir.glob("*.eps")
-    # allfiles.each { |i| 
-    #   sh %{cp -f *.eps #{i}}
-    # }
-
     c.problems.each { |problem|
       skipvalue = false
       filelist << "#{final_directory}/question_#{counter}.tex"
@@ -123,6 +110,7 @@ task :makeQuizPDFS do |t,args|
   #puts "HERE !pnglist:#{pnglist.join("\n")}"
   sh %{pdfjam  --fitpaper 'true' --suffix joined  --papersize '{8.5cm,7.4cm}' #{frontpage} #{pnglist.join(" ")} --outfile #{final_directory + "/quiz.pdf"} }
   sh %{pdfjam #{final_directory + "/quiz.pdf"}  '2-' --papersize '{8.5cm,7.4cm}' --outfile #{final_directory + "/quiz.pdf"}}
+  sh "find . -type f -name \"front_page*\" -print0 -maxdepth 1 | xargs -0 rm"
 
 end
 
@@ -131,7 +119,6 @@ desc "Make Quiz PDF"
 task :makeQuizPDF , [:file] do |t,args|
   args.with_defaults( :file => "formulas.tex" )
 
-  # output_file = args[:file].pathmap("%X") + ".pdf"
   output_file = args[:file].pathmap("%f").pathmap("%X") + ".pdf"
 
   entries = ENV.has_key?("NOTECARDS") ? ENV["NOTECARDS"].split(",") : [args[:file]]
@@ -141,18 +128,13 @@ task :makeQuizPDF , [:file] do |t,args|
   entries.each { |entry | 
     defined? debugger ? debugger() : nil
 
-    # puts "Foo: #{entry}"
-    
+  
     c = LatexProblems.new( :file => entry, :basetype => PngProblem )
     
-    puts "Problems are #{c.problems}"
-
     if !File.directory?("Tmp" )
       Dir.mkdir( "Tmp")
     end
 
-    #puts entry.pathmap("%f")
-    #directory = "Tmp/#{entry.pathmap("%X")}"
     directory = "Tmp/#{entry.pathmap("%f")}"
     if File.directory?( directory )
       sh %{rm -rf #{directory} }
@@ -212,8 +194,8 @@ task :makeQuizPDF , [:file] do |t,args|
     sh %{pdfjam  --fitpaper 'true' --suffix joined  --papersize '{8.5cm,7.4cm}' #{frontpage} #{pnglist.join(" ")} --outfile #{directory + "/#{output_file}"} }
     sh %{pdfjam #{directory + "/#{output_file}"}  '2-' --papersize '{8.5cm,7.4cm}' --outfile #{directory + "/#{output_file}"}}
     cp File.expand_path(directory + "/#{output_file}" ) , "." 
-    rm "front_page.pdf"
   }
+  sh "find . -type f -name \"front_page*\" -print0 -maxdepth 1 | xargs -0 rm"
 end
 
 def checkFiles(dir,files)
