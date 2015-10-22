@@ -80,6 +80,13 @@ class LatexProblems
     return retstring
   end
 
+  def self.findLatexPackages(file) 
+    # puts "BARRRRR!!!"
+    packages = File.read(file).split("\n").find_all { |i| i =~ /^\s*((\\usepackage|\\input).*)/ } 
+    # puts packages
+    packages
+  end
+
   def loadFile(file)
     defined? debugger ? debugger : nil 
     @problems = _findProblems(file )
