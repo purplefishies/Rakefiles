@@ -155,7 +155,6 @@ task :makeQuizPDF , [:file] do |t,args|
       keepfile = "#{directory}/question_#{counter}.tex"
       filelist << keepfile
 
-      puts "BADSDAS #{packages}"
       makeLatexFile( filelist.last , problem.question , packages)
 
       tmpfile = makePNGFile( filelist.last )
