@@ -122,6 +122,8 @@ task :makeQuizPDF , [:file] do |t,args|
   output_file = args[:file].pathmap("%f").pathmap("%X") + ".pdf"
 
   entries = ENV.has_key?("NOTECARDS") ? ENV["NOTECARDS"].split(",") : [args[:file]]
+
+  outfile = ( ENV.has_key?("QUIZ_NAME") ? ENV["QUIZ_NAME"] : output_file )
   
   frontpage = "front_page.pdf"
 
@@ -188,7 +190,7 @@ task :makeQuizPDF , [:file] do |t,args|
 
     sh %{pdfjam  --fitpaper 'true' --suffix joined  --papersize '{8.5cm,7.4cm}' #{frontpage} #{pnglist.join(" ")} --outfile #{directory + "/#{output_file}"} }
     sh %{pdfjam #{directory + "/#{output_file}"}  '2-' --papersize '{8.5cm,7.4cm}' --outfile #{directory + "/#{output_file}"}}
-    cp File.expand_path(directory + "/#{output_file}" ) , "." 
+    cp File.expand_path(directory + "/#{output_file}" ) , outfile
   }
   sh "find . -type f -name \"front_page*\" -print0 -maxdepth 1 | xargs -0 rm"
 end
