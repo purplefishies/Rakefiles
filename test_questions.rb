@@ -33,7 +33,7 @@ class Problem
 
   def _getQuestion(problem)
 #    debugger()
-    problem =~ /^.*(?:\\begin\{[kK]?Q\d?\}\s*(\S.*?)\s*\\end\{[kK]?Q\d?\}).*$/xms
+    problem =~ /^.*(?:\\begin\{[kK]?Q\d?\}\s*(\S.*?)\s*\\end\{[kK]?Q\d?\}).*$/xmsu
     tmp = $1
     if !tmp.nil?
       tmp.gsub!(/\n/," ")
@@ -46,7 +46,7 @@ class Problem
   end
 
   def _getAnswer(problem)
-    problem =~ /^.*(?:\\begin\{[kK]?A\d?\}\s*(\S.*?)\s*\\end\{[kK]?A\d?\}).*$/xms
+    problem =~ /^.*(?:\\begin\{[kK]?A\d?\}\s*(\S.*?)\s*\\end\{[kK]?A\d?\}).*$/xmsu
     tmp =  $1
 #    if !tmp.nil?
 #      tmp.gsub!(/\n/," ")
@@ -92,7 +92,7 @@ class LatexProblems
     @problems = _findProblems(file )
     puts "Found problems #{problems.length}"
     # exit(1)
-    @collections = [file.gsub!(/\.tex/,'')]
+    @collections = [file.gsub(/\.tex/,'')]
     @collection_range = [[0,@problems.length-1]]
   end
 

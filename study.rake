@@ -180,7 +180,6 @@ task :makeQuizPDF , [:file] do |t,args|
       else 
         pnglist << tmpfile
       end
-
       counter += 1
     }
     
@@ -209,6 +208,7 @@ def makeFrontPDF(filename)
 \\usepackage{amssymb}
 \\usepackage{geometry}
 \\input{header}
+\\usepackage[utf8]{inputenc}
 \\usepackage{xskak}
 \\geometry{
 paperwidth=7.4cm,
@@ -269,6 +269,7 @@ def makeLatexFile(filename, string, packages=[])
 \\usepackage{amssymb}
 \\usepackage{geometry}
 \\usepackage{xskak}
+\\usepackage[utf8]{inputenc}
 \\input{header}
 """.split("\n")
 
